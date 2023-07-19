@@ -142,7 +142,16 @@ pub const Block = struct {
     miner: Address,
     receipts_root: H(256),
     state_root: H(256),
+    transactions_root: H(256),
+    uncles_root: H(256),
     transactions: std.ArrayList(H(256)),
+    difficulty: U(256),
+    extra_data: H(256),
+    mix_hash: H(256),
+    nonce: H(64),
+    size: U(256),
+    total_difficulty: U(256),
+    logs_bloom: U(2048),
 
     pub fn deinit(self: Block) void {
         self.transactions.deinit();
@@ -157,6 +166,12 @@ pub const Block = struct {
             .gas_used = .{ .rename = "gasUsed" },
             .receipts_root = .{ .rename = "receiptsRoot" },
             .state_root = .{ .rename = "stateRoot" },
+            .transactions_root = .{ .rename = "transactionsRoot" },
+            .uncles_root = .{ .rename = "sha3Uncles" },
+            .extra_data = .{ .rename = "extraData" },
+            .mix_hash = .{ .rename = "mixHash" },
+            .total_difficulty = .{ .rename = "totalDifficulty" },
+            .logs_bloom = .{ .rename = "logsBloom" },
         };
     };
 };
