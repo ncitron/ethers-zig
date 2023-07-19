@@ -1,0 +1,14 @@
+.{
+    .name = "ethers-zig",
+    .version = "0.1.0",
+    .dependencies = .{
+        .getty = .{
+            .url = "https://github.com/getty-zig/getty/archive/main.tar.gz",
+            .hash = "12205aae2ea6dcaa3efcf3751c40dbd3946e539794688bad62e79c86635762204a3d",
+        },
+        .json = .{
+            .url = "https://github.com/getty-zig/json/archive/07595d9323568873ac07aebc616683855c2e7d56.tar.gz",
+            .hash = "1220465f43808ceff290a3473a63fe623d2bf9c9968de242af188930ec5301a17de4",
+        },
+    },
+}
