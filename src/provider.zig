@@ -30,9 +30,10 @@ pub const Provider = struct {
         return try self.sendRpcRequest(req_body, U64);
     }
 
-    pub fn getBlockByNumber(self: Provider, number: U64) !Block {
-        const req_body = try buildRpcRequest("eth_getBlockByNumber", .{ number, false });
-        return try self.sendRpcRequest(req_body, Block);
+    pub fn getBlockByNumber(self: Provider, comptime TxType: type, number: U64) !Block(TxType) {
+        const full_tx = TxType == Transaction;
+        const req_body = try buildRpcRequest("eth_getBlockByNumber", .{ number, full_tx });
+        return try self.sendRpcRequest(req_body, Block(TxType));
     }
 
     pub fn getTransactionByHash(self: Provider, hash: H256) !Transaction {
@@ -172,7 +173,21 @@ test "get block by number" {
 
     const provider = Provider{ .allocator = allocator, .rpc = rpc };
 
-    const block = try provider.getBlockByNumber(U64.from(17728594));
+    const block = try provider.getBlockByNumber(H256, U64.from(17728594));
+    defer block.deinit();
+
+    try std.testing.expectEqual(block.number, U64.from(17728594));
+}
+
+test "get block by full tx" {
+    const allocator = std.testing.allocator;
+
+    const rpc = try dotenv.getEnvVar(allocator, ".env", "mainnet_rpc");
+    defer allocator.free(rpc);
+
+    const provider = Provider{ .allocator = allocator, .rpc = rpc };
+
+    const block = try provider.getBlockByNumber(Transaction, U64.from(17728594));
     defer block.deinit();
 
     try std.testing.expectEqual(block.number, U64.from(17728594));
