@@ -11,6 +11,7 @@ pub fn build(b: *std.Build) void {
     const opts = .{ .target = target, .optimize = optimize };
     const getty = b.dependency("getty", opts);
     const json = b.dependency("json", opts);
+    const dotenv = b.dependency("dotenv", opts);
 
     const lib = b.addStaticLibrary(.{
         .name = "ethers-zig",
@@ -21,6 +22,7 @@ pub fn build(b: *std.Build) void {
 
     lib.addModule("getty", getty.module("getty"));
     lib.addModule("json", json.module("json"));
+    lib.addModule("dotenv", dotenv.module("dotenv"));
 
     // This declares intent for the library to be installed into the standard
     // location when the user invokes the "install" step (the default step when
@@ -37,6 +39,7 @@ pub fn build(b: *std.Build) void {
 
     main_tests.addModule("getty", getty.module("getty"));
     main_tests.addModule("json", json.module("json"));
+    main_tests.addModule("dotenv", dotenv.module("dotenv"));
 
     const run_main_tests = b.addRunArtifact(main_tests);
 

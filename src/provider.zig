@@ -1,6 +1,7 @@
 const std = @import("std");
 const getty = @import("getty");
 const json = @import("json");
+const dotenv = @import("dotenv");
 const types = @import("types.zig");
 
 pub const Provider = struct {
@@ -91,8 +92,6 @@ fn buildRpcRequest(method: []const u8, params: anytype) !RpcRequest(@TypeOf(para
     };
 }
 
-const rpc = "MAINNET_RPC";
-
 test "serialize rpc request" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer if (gpa.deinit() != .ok) @panic("memory leak detected");
@@ -124,7 +123,11 @@ test "block number" {
     defer if (gpa.deinit() != .ok) @panic("memory leak detected");
     const allocator = gpa.allocator();
 
+    const rpc = try dotenv.getEnvVar(allocator, ".env", "mainnet_rpc");
+    defer allocator.free(rpc);
+
     const provider = Provider{ .allocator = allocator, .rpc = rpc };
+
     const block_number = try provider.blockNumber();
     try std.testing.expect(block_number.value > 17_000_000);
 }
@@ -134,7 +137,11 @@ test "get balance" {
     defer if (gpa.deinit() != .ok) @panic("memory leak detected");
     const allocator = gpa.allocator();
 
+    const rpc = try dotenv.getEnvVar(allocator, ".env", "mainnet_rpc");
+    defer allocator.free(rpc);
+
     const provider = Provider{ .allocator = allocator, .rpc = rpc };
+
     const addr = try types.Address.fromString("0xDAFEA492D9c6733ae3d56b7Ed1ADB60692c98Bc5");
     const balance = try provider.getBalance(addr);
 
@@ -146,7 +153,11 @@ test "chain id" {
     defer if (gpa.deinit() != .ok) @panic("memory leak detected");
     const allocator = gpa.allocator();
 
+    const rpc = try dotenv.getEnvVar(allocator, ".env", "mainnet_rpc");
+    defer allocator.free(rpc);
+
     const provider = Provider{ .allocator = allocator, .rpc = rpc };
+
     const chain_id = try provider.chainId();
     try std.testing.expectEqual(chain_id.value, 1);
 }
@@ -156,7 +167,11 @@ test "get block by number" {
     defer if (gpa.deinit() != .ok) @panic("memory leak detected");
     const allocator = gpa.allocator();
 
+    const rpc = try dotenv.getEnvVar(allocator, ".env", "mainnet_rpc");
+    defer allocator.free(rpc);
+
     const provider = Provider{ .allocator = allocator, .rpc = rpc };
+
     const block = try provider.getBlockByNumber(types.U(64).from(17728594));
     defer block.deinit();
 

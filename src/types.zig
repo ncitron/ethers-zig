@@ -12,6 +12,10 @@ pub fn U(comptime bits: u16) type {
             return .{ .value = value };
         }
 
+        pub fn format(self: @This(), comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+            try writer.print("{}", .{self.value});
+        }
+
         pub const @"getty.sb" = struct {
             pub fn serialize(allocator: ?std.mem.Allocator, value: anytype, serializer: anytype) !@TypeOf(serializer).Ok {
                 const uint_str = try std.fmt.allocPrint(allocator.?, "0x{x}", .{value.value});
@@ -58,6 +62,11 @@ pub fn H(comptime bits: u16) type {
             return .{ .value = value };
         }
 
+        pub fn format(self: @This(), comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+            const fmt_str = std.fmt.comptimePrint("0x{{x:0>{}}}", .{bits / 8 * 2});
+            try writer.print(fmt_str, .{self.value});
+        }
+
         pub const @"getty.sb" = struct {
             pub fn serialize(allocator: ?std.mem.Allocator, value: anytype, serializer: anytype) !@TypeOf(serializer).Ok {
                 const fmt_str = std.fmt.comptimePrint("0x{{x:0>{}}}", .{bits / 8 * 2});
@@ -100,6 +109,10 @@ pub const Address = struct {
 
     pub fn toString(self: Address, allocator: std.mem.Allocator) ![]const u8 {
         return try std.fmt.allocPrint(allocator, "0x{x}", .{self.value});
+    }
+
+    pub fn format(self: @This(), comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        try writer.print("0x{x}", .{self.value});
     }
 
     pub const @"getty.sb" = struct {
@@ -151,7 +164,7 @@ pub const Block = struct {
     nonce: H(64),
     size: U(256),
     total_difficulty: U(256),
-    logs_bloom: U(2048),
+    logs_bloom: H(2048),
 
     pub fn deinit(self: Block) void {
         self.transactions.deinit();
