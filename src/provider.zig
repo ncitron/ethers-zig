@@ -93,9 +93,7 @@ fn buildRpcRequest(method: []const u8, params: anytype) !RpcRequest(@TypeOf(para
 }
 
 test "serialize rpc request" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak detected");
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     const addr = try types.Address.fromString("0xDAFEA492D9c6733ae3d56b7Ed1ADB60692c98Bc5");
     const req_body = try buildRpcRequest("eth_getBalance", .{addr});
@@ -108,9 +106,7 @@ test "serialize rpc request" {
 }
 
 test "deserialize rpc response" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak detected");
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     const resp = "{\"jsonrpc\":\"2.0\",\"id\":0,\"result\":\"0x4d2\"}";
     const parsed = try json.fromSlice(allocator, RpcResponse(types.U(64)), resp);
@@ -119,9 +115,7 @@ test "deserialize rpc response" {
 }
 
 test "block number" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak detected");
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     const rpc = try dotenv.getEnvVar(allocator, ".env", "mainnet_rpc");
     defer allocator.free(rpc);
@@ -133,9 +127,7 @@ test "block number" {
 }
 
 test "get balance" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak detected");
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     const rpc = try dotenv.getEnvVar(allocator, ".env", "mainnet_rpc");
     defer allocator.free(rpc);
@@ -149,9 +141,7 @@ test "get balance" {
 }
 
 test "chain id" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak detected");
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     const rpc = try dotenv.getEnvVar(allocator, ".env", "mainnet_rpc");
     defer allocator.free(rpc);
@@ -163,9 +153,7 @@ test "chain id" {
 }
 
 test "get block by number" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak detected");
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     const rpc = try dotenv.getEnvVar(allocator, ".env", "mainnet_rpc");
     defer allocator.free(rpc);

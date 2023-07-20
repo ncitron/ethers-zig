@@ -195,9 +195,7 @@ test "create address" {
 }
 
 test "address to string" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak detected");
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     const addr = try Address.fromString("0xDAFEA492D9c6733ae3d56b7Ed1ADB60692c98Bc5");
     const addr_string = try addr.toString(allocator);
@@ -207,9 +205,7 @@ test "address to string" {
 }
 
 test "serialize address" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak detected");
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     const addr = try Address.fromString("0xDAFEA492D9c6733ae3d56b7Ed1ADB60692c98Bc5");
     const addr_json = try json.toSlice(allocator, addr);
@@ -219,9 +215,7 @@ test "serialize address" {
 }
 
 test "deserialize address" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak detected");
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     const addr_json = "\"0xdafea492d9c6733ae3d56b7ed1adb60692c98bc5\"";
     const addr = try json.fromSlice(allocator, Address, addr_json);
@@ -235,9 +229,7 @@ test "create uint" {
 }
 
 test "serialize uint" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak detected");
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     const uint = U(256).from(1234);
     const uint_json = try json.toSlice(allocator, uint);
@@ -247,9 +239,7 @@ test "serialize uint" {
 }
 
 test "deserialize uint" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak detected");
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     const uint_json = "\"0x4d2\"";
     const uint = try json.fromSlice(allocator, U(256), uint_json);
@@ -263,9 +253,7 @@ test "create hash" {
 }
 
 test "serialize hash" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak detected");
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     const hash = try H(256).fromString("0x1234");
     const hash_json = try json.toSlice(allocator, hash);
@@ -276,9 +264,7 @@ test "serialize hash" {
 }
 
 test "deserialize hash" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak detected");
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     const hash_json = "\"0x4d2\"";
     const hash = try json.fromSlice(allocator, H(256), hash_json);
