@@ -2,30 +2,35 @@ const std = @import("std");
 const getty = @import("getty");
 const json = @import("json");
 const dotenv = @import("dotenv");
-const types = @import("types.zig");
+
+const types = @import("types/main.zig");
+const U256 = types.U256;
+const U64 = types.U64;
+const Address = types.Address;
+const Block = types.Block;
 
 pub const Provider = struct {
     allocator: std.mem.Allocator,
     rpc: []const u8,
 
-    pub fn blockNumber(self: Provider) !types.U(64) {
+    pub fn blockNumber(self: Provider) !U64 {
         const req_body = try buildRpcRequest("eth_blockNumber", .{});
-        return try self.sendRpcRequest(req_body, types.U(64));
+        return try self.sendRpcRequest(req_body, U64);
     }
 
-    pub fn getBalance(self: Provider, addr: types.Address) !types.U(256) {
+    pub fn getBalance(self: Provider, addr: Address) !U256 {
         const req_body = try buildRpcRequest("eth_getBalance", .{addr});
-        return try self.sendRpcRequest(req_body, types.U(256));
+        return try self.sendRpcRequest(req_body, U256);
     }
 
-    pub fn chainId(self: Provider) !types.U(64) {
+    pub fn chainId(self: Provider) !U64 {
         const req_body = try buildRpcRequest("eth_chainId", .{});
-        return try self.sendRpcRequest(req_body, types.U(64));
+        return try self.sendRpcRequest(req_body, U64);
     }
 
-    pub fn getBlockByNumber(self: Provider, number: types.U(64)) !types.Block {
+    pub fn getBlockByNumber(self: Provider, number: U64) !Block {
         const req_body = try buildRpcRequest("eth_getBlockByNumber", .{ number, false });
-        return try self.sendRpcRequest(req_body, types.Block);
+        return try self.sendRpcRequest(req_body, Block);
     }
 
     fn sendRpcRequest(self: Provider, rpc_req: anytype, comptime R: type) !R {
@@ -95,7 +100,7 @@ fn buildRpcRequest(method: []const u8, params: anytype) !RpcRequest(@TypeOf(para
 test "serialize rpc request" {
     const allocator = std.testing.allocator;
 
-    const addr = try types.Address.fromString("0xDAFEA492D9c6733ae3d56b7Ed1ADB60692c98Bc5");
+    const addr = try Address.fromString("0xDAFEA492D9c6733ae3d56b7Ed1ADB60692c98Bc5");
     const req_body = try buildRpcRequest("eth_getBalance", .{addr});
 
     const req_json = try json.toSlice(allocator, req_body);
@@ -109,7 +114,7 @@ test "deserialize rpc response" {
     const allocator = std.testing.allocator;
 
     const resp = "{\"jsonrpc\":\"2.0\",\"id\":0,\"result\":\"0x4d2\"}";
-    const parsed = try json.fromSlice(allocator, RpcResponse(types.U(64)), resp);
+    const parsed = try json.fromSlice(allocator, RpcResponse(U64), resp);
 
     try std.testing.expectEqual(parsed.result.value, 1234);
 }
@@ -134,7 +139,7 @@ test "get balance" {
 
     const provider = Provider{ .allocator = allocator, .rpc = rpc };
 
-    const addr = try types.Address.fromString("0xDAFEA492D9c6733ae3d56b7Ed1ADB60692c98Bc5");
+    const addr = try Address.fromString("0xDAFEA492D9c6733ae3d56b7Ed1ADB60692c98Bc5");
     const balance = try provider.getBalance(addr);
 
     try std.testing.expect(balance.value > 0);
@@ -160,8 +165,8 @@ test "get block by number" {
 
     const provider = Provider{ .allocator = allocator, .rpc = rpc };
 
-    const block = try provider.getBlockByNumber(types.U(64).from(17728594));
+    const block = try provider.getBlockByNumber(U64.from(17728594));
     defer block.deinit();
 
-    try std.testing.expectEqual(block.number, types.U(64).from(17728594));
+    try std.testing.expectEqual(block.number, U64.from(17728594));
 }

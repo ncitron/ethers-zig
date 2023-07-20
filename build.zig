@@ -14,8 +14,8 @@ pub fn build(b: *std.Build) void {
     const dotenv = b.dependency("dotenv", opts);
 
     const lib = b.addStaticLibrary(.{
-        .name = "ethers-zig",
-        .root_source_file = .{ .path = "src/provider.zig" },
+        .name = "ethers",
+        .root_source_file = .{ .path = "src/main.zig" },
         .target = target,
         .optimize = optimize,
     });
@@ -32,7 +32,7 @@ pub fn build(b: *std.Build) void {
     // Creates a step for unit testing. This only builds the test executable
     // but does not run it.
     const main_tests = b.addTest(.{
-        .root_source_file = .{ .path = "src/provider.zig" },
+        .root_source_file = .{ .path = "src/main.zig" },
         .target = target,
         .optimize = optimize,
     });
