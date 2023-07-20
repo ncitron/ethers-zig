@@ -10,6 +10,42 @@ pub const H256 = H(256);
 pub const H64 = H(64);
 pub const Address = H(160);
 
+pub const Bytes = struct {
+    value: std.ArrayList(u8),
+
+    pub fn deinit(self: Bytes) void {
+        self.value.deinit();
+    }
+
+    pub fn format(self: @This(), comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        try writer.print("0x{}", .{std.fmt.fmtSliceHexLower(self.value.items)});
+    }
+
+    pub const @"getty.db" = struct {
+        pub fn deserialize(allocator: ?std.mem.Allocator, comptime T: type, deserializer: anytype, value: anytype) !T {
+            return deserializer.deserializeAny(allocator, value);
+        }
+
+        pub fn Visitor(comptime T: type) type {
+            return struct {
+                pub usingnamespace getty.de.Visitor(
+                    @This(),
+                    T,
+                    .{ .visitString = visitString },
+                );
+
+                pub fn visitString(_: @This(), allocator: ?std.mem.Allocator, comptime De: type, string: anytype) De.Error!T {
+                    const stripped = if (std.mem.startsWith(u8, string, "0x")) string[2..] else string;
+
+                    const value = try allocator.?.alloc(u8, stripped.len / 2);
+                    _ = std.fmt.hexToBytes(value, stripped) catch return De.Error.InvalidValue;
+                    return .{ .value = std.ArrayList(u8).fromOwnedSlice(allocator.?, value) };
+                }
+            };
+        }
+    };
+};
+
 fn U(comptime bits: u16) type {
     const Uint = std.meta.Int(.unsigned, bits);
 
@@ -178,4 +214,12 @@ test "deserialize hash" {
     const hash = try json.fromSlice(allocator, H(256), hash_json);
 
     try std.testing.expectEqual(hash.value, 1234);
+}
+
+test "deserialize bytes" {
+    const bytes_json = "\"0x1234\"";
+    const bytes = try json.fromSlice(std.testing.allocator, Bytes, bytes_json);
+    defer bytes.deinit();
+
+    try std.testing.expect(std.mem.eql(u8, bytes.value.items, &[2]u8{ 18, 52 }));
 }

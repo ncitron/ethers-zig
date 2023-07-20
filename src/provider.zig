@@ -6,8 +6,10 @@ const dotenv = @import("dotenv");
 const types = @import("types/main.zig");
 const U256 = types.U256;
 const U64 = types.U64;
+const H256 = types.H256;
 const Address = types.Address;
 const Block = types.Block;
+const Transaction = types.Transaction;
 
 pub const Provider = struct {
     allocator: std.mem.Allocator,
@@ -31,6 +33,11 @@ pub const Provider = struct {
     pub fn getBlockByNumber(self: Provider, number: U64) !Block {
         const req_body = try buildRpcRequest("eth_getBlockByNumber", .{ number, false });
         return try self.sendRpcRequest(req_body, Block);
+    }
+
+    pub fn getTransactionByHash(self: Provider, hash: H256) !Transaction {
+        const req_body = try buildRpcRequest("eth_getTransactionByHash", .{hash});
+        return try self.sendRpcRequest(req_body, Transaction);
     }
 
     fn sendRpcRequest(self: Provider, rpc_req: anytype, comptime R: type) !R {
@@ -169,4 +176,19 @@ test "get block by number" {
     defer block.deinit();
 
     try std.testing.expectEqual(block.number, U64.from(17728594));
+}
+
+test "get transaction by hash" {
+    const allocator = std.testing.allocator;
+
+    const rpc = try dotenv.getEnvVar(allocator, ".env", "mainnet_rpc");
+    defer allocator.free(rpc);
+
+    const provider = Provider{ .allocator = allocator, .rpc = rpc };
+
+    const hash = try H256.fromString("0xb87a0074d06fcb53389401b137a5cc741e50d7eabe18a4248edf2a1910b99719");
+    const tx = try provider.getTransactionByHash(hash);
+    defer tx.deinit();
+
+    try std.testing.expectEqual(tx.hash.?.value, hash.value);
 }
