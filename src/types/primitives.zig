@@ -17,9 +17,25 @@ pub const Bytes = struct {
         self.value.deinit();
     }
 
+    pub fn fromString(allocator: std.mem.Allocator, string: []const u8) !Bytes {
+        const stripped = if (std.mem.startsWith(u8, string, "0x")) string[2..] else string;
+
+        const value = try allocator.alloc(u8, stripped.len / 2);
+        _ = try std.fmt.hexToBytes(value, stripped);
+        return .{ .value = std.ArrayList(u8).fromOwnedSlice(allocator, value) };
+    }
+
     pub fn format(self: @This(), comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         try writer.print("0x{}", .{std.fmt.fmtSliceHexLower(self.value.items)});
     }
+
+    pub const @"getty.sb" = struct {
+        pub fn serialize(allocator: ?std.mem.Allocator, value: anytype, serializer: anytype) !@TypeOf(serializer).Ok {
+            const str = try std.fmt.allocPrint(allocator.?, "0x{}", .{std.fmt.fmtSliceHexLower(value.value.items)});
+            defer allocator.?.free(str);
+            return try serializer.serializeString(str);
+        }
+    };
 
     pub const @"getty.db" = struct {
         pub fn deserialize(allocator: ?std.mem.Allocator, comptime T: type, deserializer: anytype, value: anytype) !T {
@@ -35,11 +51,7 @@ pub const Bytes = struct {
                 );
 
                 pub fn visitString(_: @This(), allocator: ?std.mem.Allocator, comptime De: type, string: anytype) De.Error!T {
-                    const stripped = if (std.mem.startsWith(u8, string, "0x")) string[2..] else string;
-
-                    const value = try allocator.?.alloc(u8, stripped.len / 2);
-                    _ = std.fmt.hexToBytes(value, stripped) catch return De.Error.InvalidValue;
-                    return .{ .value = std.ArrayList(u8).fromOwnedSlice(allocator.?, value) };
+                    return Bytes.fromString(allocator.?, string) catch return De.Error.InvalidValue;
                 }
             };
         }

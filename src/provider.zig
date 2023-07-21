@@ -7,9 +7,11 @@ const types = @import("types/main.zig");
 const U256 = types.U256;
 const U64 = types.U64;
 const H256 = types.H256;
+const Bytes = types.Bytes;
 const Address = types.Address;
 const Block = types.Block;
 const Transaction = types.Transaction;
+const TransactionRequest = types.TransactionRequest;
 
 pub const Provider = struct {
     allocator: std.mem.Allocator,
@@ -39,6 +41,11 @@ pub const Provider = struct {
     pub fn getTransactionByHash(self: Provider, hash: H256) !Transaction {
         const req_body = try buildRpcRequest("eth_getTransactionByHash", .{hash});
         return try self.sendRpcRequest(req_body, Transaction);
+    }
+
+    pub fn call(self: Provider, tx: TransactionRequest) !Bytes {
+        const req_body = try buildRpcRequest("eth_call", .{ tx, "latest" });
+        return try self.sendRpcRequest(req_body, Bytes);
     }
 
     fn sendRpcRequest(self: Provider, rpc_req: anytype, comptime R: type) !R {
@@ -206,4 +213,28 @@ test "get transaction by hash" {
     defer tx.deinit();
 
     try std.testing.expectEqual(tx.hash.?.value, hash.value);
+}
+
+test "call" {
+    const allocator = std.testing.allocator;
+
+    const rpc = try dotenv.getEnvVar(allocator, ".env", "mainnet_rpc");
+    defer allocator.free(rpc);
+
+    const provider = Provider{ .allocator = allocator, .rpc = rpc };
+
+    const tx: TransactionRequest = .{
+        .to = try Address.fromString("0x6B175474E89094C44Da98b954EedeAC495271d0F"),
+        .input = try Bytes.fromString(std.testing.allocator, "0x95d89b41"),
+    };
+
+    defer tx.input.?.deinit();
+
+    const result = try provider.call(tx);
+    defer result.deinit();
+
+    const expected = try Bytes.fromString(allocator, "0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000034441490000000000000000000000000000000000000000000000000000000000");
+    defer expected.deinit();
+
+    try std.testing.expect(std.mem.eql(u8, result.value.items, expected.value.items));
 }
