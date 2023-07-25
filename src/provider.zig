@@ -48,7 +48,7 @@ pub const Provider = struct {
         return try self.sendRpcRequest(req_body, Bytes);
     }
 
-    fn sendRpcRequest(self: Provider, rpc_req: anytype, comptime R: type) !R {
+    fn sendRpcRequest(self: Provider, rpc_req_body: anytype, comptime R: type) !R {
         var provider = std.http.Client{ .allocator = self.allocator };
         defer provider.deinit();
 
@@ -56,27 +56,19 @@ pub const Provider = struct {
 
         var headers = std.http.Headers{ .allocator = self.allocator };
         defer headers.deinit();
-
         try headers.append("accept", "*/*");
 
         var req = try provider.request(.POST, uri, headers, .{});
         defer req.deinit();
 
-        const req_body = try json.toSlice(self.allocator, rpc_req);
-        defer self.allocator.free(req_body);
-
         req.transfer_encoding = .chunked;
         try req.start();
-        try req.writer().writeAll(req_body);
+        try json.toWriter(self.allocator, rpc_req_body, req.writer());
 
         try req.finish();
-
         try req.wait();
 
-        const body = try req.reader().readAllAlloc(self.allocator, 1024 * 1024);
-        defer self.allocator.free(body);
-
-        const resp = try json.fromSlice(self.allocator, RpcResponse(R), body);
+        const resp = try json.fromReader(self.allocator, RpcResponse(R), req.reader());
         return resp.result;
     }
 };
